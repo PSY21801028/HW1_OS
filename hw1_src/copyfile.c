@@ -54,7 +54,17 @@ void copy_multiple_files(int argc, char *argv[], const char *target, int verbose
     }
 
     for (int i = 2; i < argc - 1; i++) {
-        copy_file(argv[i], target, verbose);
+        // Get the file name from the source path
+        char *filename = strrchr(argv[i], '/');
+        if (filename == NULL) {
+            filename = argv[i];
+        } else {
+            filename++; // Skip the '/'
+        }
+        // Construct the target path
+        char target_file[PATH_MAX];
+        snprintf(target_file, PATH_MAX, "%s/%s", target, filename);
+        copy_file(argv[i], target_file, verbose);
     }
 }
 
@@ -122,6 +132,9 @@ int main(int argc, char *argv[]) {
             case 'd':
                 copy_directory(argv[2], argv[3], verbose);
                 break;
+            default:
+                fprintf(stderr, "Usage: %s -[f|m|d] [-v] Source Target\n", argv[0]);
+                exit(EXIT_FAILURE);
         }
     }
 
