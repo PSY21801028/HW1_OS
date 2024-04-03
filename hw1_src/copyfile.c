@@ -47,12 +47,13 @@ void copy_file(const char *source, const char *target, int verbose) {
 }
 
 void copy_multiple_files(int argc, char *argv[], const char *target, int verbose) {
-    // Create target directory
-    if (mkdir(target, 0777) == -1) {
+    // Create target directory if it does not exist
+    if (mkdir(target, 0777) == -1 && errno != EEXIST) { // Check if error is not "File exists"
         perror("Error creating target directory");
         exit(EXIT_FAILURE);
     }
 
+    // Copy each file to the target directory
     for (int i = 2; i < argc - 1; i++) {
         // Get the file name from the source path
         char *filename = strrchr(argv[i], '/');
