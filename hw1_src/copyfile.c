@@ -109,9 +109,6 @@ int main(int argc, char *argv[]) {
             case 'v':
                 verbose = 1;
                 break;
-            default:
-                fprintf(stderr, "Usage: %s -[f|m|d] [-v] Source Target\n", argv[0]);
-                exit(EXIT_FAILURE);
         }
     }
 
