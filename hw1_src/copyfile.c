@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <string.h>
+#include <errno.h>
 
 #define BUF_SIZE 4096
 
@@ -14,21 +15,18 @@ void copy_file(const char *source, const char *target, int verbose) {
     ssize_t bytes_read, bytes_written;
     char buffer[BUF_SIZE];
 
-    // Open source file
     source_fd = open(source, O_RDONLY);
     if (source_fd == -1) {
         perror("Error opening source file");
         exit(EXIT_FAILURE);
     }
 
-    // Open target file
     target_fd = open(target, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (target_fd == -1) {
         perror("Error opening target file");
         exit(EXIT_FAILURE);
     }
 
-    // Copy file contents
     while ((bytes_read = read(source_fd, buffer, BUF_SIZE)) > 0) {
         bytes_written = write(target_fd, buffer, bytes_read);
         if (bytes_written != bytes_read) {
@@ -37,7 +35,6 @@ void copy_file(const char *source, const char *target, int verbose) {
         }
     }
 
-    // Close files
     close(source_fd);
     close(target_fd);
 
@@ -47,22 +44,18 @@ void copy_file(const char *source, const char *target, int verbose) {
 }
 
 void copy_multiple_files(int argc, char *argv[], const char *target, int verbose) {
-    // Create target directory if it does not exist
-    if (mkdir(target, 0777) == -1 && errno != EEXIST) { // Check if error is not "File exists"
+    if (mkdir(target, 0777) == -1 && errno != EEXIST) {
         perror("Error creating target directory");
         exit(EXIT_FAILURE);
     }
 
-    // Copy each file to the target directory
     for (int i = 2; i < argc - 1; i++) {
-        // Get the file name from the source path
         char *filename = strrchr(argv[i], '/');
         if (filename == NULL) {
             filename = argv[i];
         } else {
-            filename++; // Skip the '/'
+            filename++;
         }
-        // Construct the target path
         char target_file[PATH_MAX];
         snprintf(target_file, PATH_MAX, "%s/%s", target, filename);
         copy_file(argv[i], target_file, verbose);
@@ -73,20 +66,17 @@ void copy_directory(const char *source, const char *target, int verbose) {
     DIR *dir;
     struct dirent *entry;
 
-    // Open source directory
     dir = opendir(source);
     if (dir == NULL) {
         perror("Error opening source directory");
         exit(EXIT_FAILURE);
     }
 
-    // Create target directory
-    if (mkdir(target, 0777) == -1) {
+    if (mkdir(target, 0777) == -1 && errno != EEXIST) {
         perror("Error creating target directory");
         exit(EXIT_FAILURE);
     }
 
-    // Copy files from source directory to target directory
     while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             char source_path[PATH_MAX];
@@ -99,7 +89,6 @@ void copy_directory(const char *source, const char *target, int verbose) {
         }
     }
 
-    // Close directory
     closedir(dir);
 
     if (verbose) {
@@ -111,7 +100,6 @@ int main(int argc, char *argv[]) {
     int opt;
     int verbose = 0;
 
-    // Parse options
     while ((opt = getopt(argc, argv, "fmvd")) != -1) {
         switch (opt) {
             case 'v':
@@ -120,7 +108,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Parse options again to handle other cases after setting verbose
     optind = 1;
     while ((opt = getopt(argc, argv, "fmvd")) != -1) {
         switch (opt) {
@@ -133,9 +120,6 @@ int main(int argc, char *argv[]) {
             case 'd':
                 copy_directory(argv[2], argv[3], verbose);
                 break;
-            default:
-                fprintf(stderr, "Usage: %s -[f|m|d] [-v] Source Target\n", argv[0]);
-                exit(EXIT_FAILURE);
         }
     }
 
