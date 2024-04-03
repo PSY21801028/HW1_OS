@@ -47,6 +47,12 @@ void copy_file(const char *source, const char *target, int verbose) {
 }
 
 void copy_multiple_files(int argc, char *argv[], const char *target, int verbose) {
+    // Create target directory
+    if (mkdir(target, 0777) == -1) {
+        perror("Error creating target directory");
+        exit(EXIT_FAILURE);
+    }
+
     for (int i = 2; i < argc - 1; i++) {
         copy_file(argv[i], target, verbose);
     }
@@ -97,6 +103,16 @@ int main(int argc, char *argv[]) {
     // Parse options
     while ((opt = getopt(argc, argv, "fmvd")) != -1) {
         switch (opt) {
+            case 'v':
+                verbose = 1;
+                break;
+        }
+    }
+
+    // Parse options again to handle other cases after setting verbose
+    optind = 1;
+    while ((opt = getopt(argc, argv, "fmvd")) != -1) {
+        switch (opt) {
             case 'f':
                 copy_file(argv[2], argv[3], verbose);
                 break;
@@ -105,9 +121,6 @@ int main(int argc, char *argv[]) {
                 break;
             case 'd':
                 copy_directory(argv[2], argv[3], verbose);
-                break;
-            case 'v':
-                verbose = 1;
                 break;
         }
     }
