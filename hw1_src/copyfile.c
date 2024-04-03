@@ -42,7 +42,7 @@ void copy_file(const char *source, const char *target, int verbose) {
     close(target_fd);
 
     if (verbose) {
-        printf("Copied %s to %s\n", source, target);
+        printf("Copy File: %s -> %s\n", source, target);
     }
 }
 
